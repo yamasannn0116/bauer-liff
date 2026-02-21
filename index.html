@@ -41,12 +41,11 @@
         el.textContent = "登録処理中...\n（GASの返答待ち）";
         meta.textContent = `lineUserId: ${lineUserId}`;
 
-        // 4) POST to GAS (WAIT RESPONSE)
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ line_user_id: lineUserId })
-        });
+        // 4) POST to GAS (CORS回避版)
+const res = await fetch(GAS_URL, {
+  method: "POST",
+  body: JSON.stringify({ line_user_id: lineUserId })
+});
 
         const text = await res.text();
 
