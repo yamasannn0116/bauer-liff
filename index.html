@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BAUER CLUB 登録</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; padding: 16px; }
+    #status { white-space: pre-wrap; line-height: 1.5; }
+    .small { opacity: 0.7; font-size: 12px; margin-top: 8px; }
+  </style>
 </head>
 <body>
   <div id="status">初期化中...</div>
+  <div class="small" id="meta"></div>
 
   <script>
     const LIFF_ID = "2009166191-Z48GsDTs";
@@ -15,38 +21,61 @@
 
     (async () => {
       const el = document.getElementById("status");
+      const meta = document.getElementById("meta");
 
       try {
+        // 1) LIFF init
         await liff.init({ liffId: LIFF_ID });
 
+        // 2) login
         if (!liff.isLoggedIn()) {
+          el.textContent = "LINEログインに移動します...";
           liff.login();
           return;
         }
 
+        // 3) getProfile
         const profile = await liff.getProfile();
-        const userId = profile.userId;
+        const lineUserId = profile.userId;
 
-        el.textContent = "登録中...";
+        el.textContent = "登録処理中...\n（GASの返答待ち）";
+        meta.textContent = `lineUserId: ${lineUserId}`;
 
-        // GASへ送信（レスポンスは待たない）
-        fetch(GAS_URL, {
+        // 4) POST to GAS (WAIT RESPONSE)
+        const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ userId: userId })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ line_user_id: lineUserId })
         });
 
-        el.textContent = "登録完了しました。";
+        const text = await res.text();
 
-        setTimeout(() => {
-          liff.closeWindow();
-        }, 1000);
+        // 5) SHOW RESULT (THIS IS THE KEY POINT)
+        alert("STATUS:" + res.status + "\n" + text);
+
+        // 6) Decide success/fail by response body (best-effort)
+        //    GASがJSONを返す前提。返らない場合も画面に残す。
+        let parsed = null;
+        try { parsed = JSON.parse(text); } catch (_) {}
+
+        if (res.ok && parsed && parsed.ok === true) {
+          el.textContent = "登録処理：成功\nこの画面は自動で閉じます。";
+          setTimeout(() => { liff.closeWindow(); }, 1200);
+        } else {
+          el.textContent =
+            "登録処理：失敗（または未確認）\n" +
+            "下の内容を管理者に共有してください。\n\n" +
+            `HTTP: ${res.status}\n` +
+            `BODY: ${text}`;
+          // 失敗時は閉じない（証拠を残す）
+        }
 
       } catch (e) {
         console.error(e);
-        el.textContent = "エラー: " + e.message;
+        el.textContent =
+          "エラー発生\n" +
+          (e && e.message ? e.message : String(e)) +
+          "\n\n※この画面は閉じません。表示内容を共有してください。";
       }
     })();
   </script>
