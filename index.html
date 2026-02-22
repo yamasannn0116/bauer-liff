@@ -54,14 +54,11 @@
 
         // 4) GASへPOST
         const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            line_user_id: lineUserId
-          })
-        });
+  method: "POST",
+  body: JSON.stringify({
+    line_user_id: lineUserId
+  })
+});
 
         const text = await res.text();
 
