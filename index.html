@@ -50,24 +50,23 @@ const res = await fetch(GAS_URL, {
         const text = await res.text();
 
         // 5) SHOW RESULT (THIS IS THE KEY POINT)
-        alert("STATUS:" + res.status + "\n" + text);
+        alert("RAW:[" + text + "]");
 
         // 6) Decide success/fail by response body (best-effort)
         //    GASがJSONを返す前提。返らない場合も画面に残す。
         let parsed = null;
         try { parsed = JSON.parse(text); } catch (_) {}
 
-        if (res.ok && parsed && parsed.ok === true) {
-          el.textContent = "登録処理：成功\nこの画面は自動で閉じます。";
-          setTimeout(() => { liff.closeWindow(); }, 1200);
-        } else {
-          el.textContent =
-            "登録処理：失敗（または未確認）\n" +
-            "下の内容を管理者に共有してください。\n\n" +
-            `HTTP: ${res.status}\n` +
-            `BODY: ${text}`;
-          // 失敗時は閉じない（証拠を残す）
-        }
+        if (res.ok && text.trim() === "OK") {
+  el.textContent = "登録処理：成功\nこの画面は自動で閉じます。";
+  setTimeout(() => { liff.closeWindow(); }, 1200);
+} else {
+  el.textContent =
+    "登録処理：失敗（または未確認）\n" +
+    "下の内容を管理者に共有してください。\n\n" +
+    `HTTP: ${res.status}\n` +
+    `BODY: ${text}`;
+}
 
       } catch (e) {
         console.error(e);
