@@ -27,10 +27,12 @@
   <div class="small" id="meta"></div>
 
   <script>
+    /************** 設定 **************/
     const LIFF_ID = "2009166191-Z48GsDTs";
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby9b-uIzlMtxz8bWaotOf5GFS1XU0elV5VduveGVpmXdc0WF3CUqbg1vzHX2RPgFJBV2Q/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwja_6I55-MYfZrqyve4a63-ZZK-COOFy32FDAyKydezD_1StGtsXTBiZYNnE2n6ZD6Qg/exec";
 
     (async () => {
+
       const el = document.getElementById("status");
       const meta = document.getElementById("meta");
 
@@ -47,14 +49,16 @@
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
 
-        el.textContent = "登録確認中...";
-        meta.textContent = `LINE_ID: ${lineUserId}`;
+        el.textContent = "登録処理中...";
+        meta.textContent = "LINE_ID: " + lineUserId;
 
         const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({
-            line_user_id: lineUserId
+            userId: lineUserId   // ★ GAS側とキー統一
           })
         });
 
@@ -69,6 +73,8 @@
 
         if (res.ok && body && body.status === "SUCCESS") {
 
+          el.textContent = "登録成功。フォームへ移動します...";
+
           const formUrl =
             "https://docs.google.com/forms/d/e/1FAIpQLScpCsfBmHYD7aVcg7oyjunWyRwRGGLCU_ZNLOa8bA7dYHKU-A/viewform" +
             "?entry.286419168=" + encodeURIComponent(lineUserId);
@@ -78,16 +84,20 @@
         } else {
 
           el.textContent =
-            "登録処理：失敗\n\n" +
-            `HTTP: ${res.status}\n` +
-            `BODY: ${text}`;
+            "登録処理失敗\n\n" +
+            "HTTP: " + res.status + "\n" +
+            "BODY: " + text;
+
         }
 
       } catch (e) {
+
         el.textContent =
-          "エラー発生\n" +
+          "エラー発生\n\n" +
           (e && e.message ? e.message : String(e));
+
       }
+
     })();
   </script>
 </body>
