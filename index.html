@@ -35,29 +35,24 @@
       const meta = document.getElementById("meta");
 
       try {
-        // 1) LIFF初期化
+
         await liff.init({ liffId: LIFF_ID });
 
-        // 2) ログイン確認
         if (!liff.isLoggedIn()) {
           el.textContent = "LINEログインに移動します...";
           liff.login();
           return;
         }
 
-        // 3) プロフィール取得
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
 
-        el.textContent = "登録処理中...\n（GASの返答待ち）";
-        meta.textContent = `lineUserId: ${lineUserId}`;
+        el.textContent = "登録確認中...";
+        meta.textContent = `LINE_ID: ${lineUserId}`;
 
-        // 4) GASへPOST
         const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             line_user_id: lineUserId
           })
@@ -65,7 +60,6 @@
 
         const text = await res.text();
 
-        // 5) 成功判定
         let body;
         try {
           body = JSON.parse(text);
@@ -74,23 +68,25 @@
         }
 
         if (res.ok && body && body.status === "SUCCESS") {
-          el.textContent = "登録処理：成功\nこの画面は自動で閉じます。";
-          setTimeout(() => {
-            liff.closeWindow();
-          }, 1200);
+
+          const formUrl =
+            "https://docs.google.com/forms/d/e/1FAIpQLScpCsfBmHYD7aVcg7oyjunWyRwRGGLCU_ZNLOa8bA7dYHKU-A/viewform" +
+            "?entry.286419168=" + encodeURIComponent(lineUserId);
+
+          window.location.href = formUrl;
+
         } else {
+
           el.textContent =
-            "登録処理：失敗（または未確認）\n\n" +
+            "登録処理：失敗\n\n" +
             `HTTP: ${res.status}\n` +
             `BODY: ${text}`;
         }
 
       } catch (e) {
-        console.error(e);
         el.textContent =
           "エラー発生\n" +
-          (e && e.message ? e.message : String(e)) +
-          "\n\n※この画面は閉じません。表示内容を共有してください。";
+          (e && e.message ? e.message : String(e));
       }
     })();
   </script>
