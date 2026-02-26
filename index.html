@@ -35,7 +35,7 @@
       const meta = document.getElementById("meta");
 
       try {
-        // 1) LIFF 初期化
+        // 1) LIFF初期化
         await liff.init({ liffId: LIFF_ID });
 
         // 2) ログイン確認
@@ -45,7 +45,7 @@
           return;
         }
 
-        // 3) LINEプロフィール取得
+        // 3) プロフィール取得
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
 
@@ -54,16 +54,26 @@
 
         // 4) GASへPOST
         const res = await fetch(GAS_URL, {
-  method: "POST",
-  body: JSON.stringify({
-    line_user_id: lineUserId
-  })
-});
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            line_user_id: lineUserId
+          })
+        });
 
         const text = await res.text();
 
         // 5) 成功判定
-        if (res.ok && text.trim() === "OK") {
+        let body;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          body = null;
+        }
+
+        if (res.ok && body && body.status === "SUCCESS") {
           el.textContent = "登録処理：成功\nこの画面は自動で閉じます。";
           setTimeout(() => {
             liff.closeWindow();
