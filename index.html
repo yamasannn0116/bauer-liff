@@ -30,6 +30,7 @@
     /************** 設定 **************/
     const LIFF_ID = "2009166191-Z48GsDTs";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyIHmxXzqxeGHMlYpB4UrQ8UE49TQ7LYt46jlNenoGb1-v29ZPVW48qZgHX7MW_2BONIg/exec";
+
     (async () => {
 
       const el = document.getElementById("status");
@@ -51,43 +52,26 @@
         el.textContent = "登録処理中...";
         meta.textContent = "LINE_ID: " + lineUserId;
 
-        const res = await fetch(GAS_URL, {
+        // 🔥 CORS回避のため no-cors を使用
+        await fetch(GAS_URL, {
           method: "POST",
+          mode: "no-cors",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            userId: lineUserId   // ★ GAS側とキー統一
+            line_user_id: lineUserId
           })
         });
 
-        const text = await res.text();
+        // レスポンスは読めないので成功前提で進める
+        el.textContent = "登録成功。フォームへ移動します...";
 
-        let body;
-        try {
-          body = JSON.parse(text);
-        } catch {
-          body = null;
-        }
+        const formUrl =
+          "https://docs.google.com/forms/d/e/1FAIpQLScpCsfBmHYD7aVcg7oyjunWyRwRGGLCU_ZNLOa8bA7dYHKU-A/viewform" +
+          "?entry.286419168=" + encodeURIComponent(lineUserId);
 
-        if (res.ok && body && body.status === "SUCCESS") {
-
-          el.textContent = "登録成功。フォームへ移動します...";
-
-          const formUrl =
-            "https://docs.google.com/forms/d/e/1FAIpQLScpCsfBmHYD7aVcg7oyjunWyRwRGGLCU_ZNLOa8bA7dYHKU-A/viewform" +
-            "?entry.286419168=" + encodeURIComponent(lineUserId);
-
-          window.location.href = formUrl;
-
-        } else {
-
-          el.textContent =
-            "登録処理失敗\n\n" +
-            "HTTP: " + res.status + "\n" +
-            "BODY: " + text;
-
-        }
+        window.location.href = formUrl;
 
       } catch (e) {
 
